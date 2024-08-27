@@ -6,8 +6,11 @@ import base64
 import uuid
 import modal
 
+if 'theme' not in st.session_state:
+    st.session_state["theme"] = ""
+
 if 'deck' not in st.session_state:
-    st.session_state.deck = None
+    st.session_state["deck"] = None
 
 # Initialize session state for custom arcana list
 if 'custom_arcana_list' not in st.session_state:
@@ -57,6 +60,18 @@ def generate_card(client: openai.Client, arcana: Arcana):
     image_base64 = base64.b64encode(response).decode("utf-8")
 
     return description, image_base64
+
+def generate_deck(client: openai.Client, theme: str):
+    # Store the deck in session state to persist across reruns
+    completion = client.beta.chat.completions.parse(
+        model="gpt-4o-2024-08-06",
+        messages=[
+            {"role": "system", "content": "Generate a custom tarot deck based on the theme provided. Remember to include 22 major and 56 minor arcana. The minor arcana should follow four custom suits. Each suit should have an Ace, the Two, the Three, the Four, the Five, the Six, the Seven, the Eight, the Nine, the Ten, the Page, the Knight, the Queen, and the King of the suit."},
+            {"role": "user", "content": f"Theme: {theme}"},
+        ],
+        response_format=TarotDeck
+    )
+    return completion.choices[0].message.parsed
 
 # Streamlit app
 def tarot_app():
@@ -122,23 +137,14 @@ def tarot_app():
 
     
     # User input for deck theme
-    theme_prompt = st.text_input("Enter a theme for your custom Tarot deck:")
+    theme_prompt = st.text_input("Enter a theme for your custom Tarot deck:", value=st.session_state.theme)
     
     # Button to trigger deck generation
     if st.button("Generate Deck"):
-        if theme_prompt:
-
-            # Store the deck in session state to persist across reruns
-            completion = client.beta.chat.completions.parse(
-                model="gpt-4o-2024-08-06",
-                messages=[
-                    {"role": "system", "content": "Generate a custom tarot deck based on the theme provided. Remember to include 22 major and 56 minor arcana. The minor arcana should follow four custom suits. Each suit should have an Ace, the Two, the Three, the Four, the Five, the Six, the Seven, the Eight, the Nine, the Ten, the Page, the Knight, the Queen, and the King of the suit."},
-                    {"role": "user", "content": f"Theme: {theme_prompt}"},
-                ],
-                response_format=TarotDeck
-            )
-            
-            st.session_state.deck = completion.choices[0].message.parsed
+        if len(theme_prompt) > 0:
+            with st.spinner("Generating your custom Tarot deck..."):
+                deck = generate_deck(client, theme_prompt)
+                st.session_state.deck = deck
 
     if st.session_state.deck is not None:
         deck = st.session_state.deck
