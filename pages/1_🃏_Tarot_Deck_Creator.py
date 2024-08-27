@@ -21,7 +21,6 @@ class Arcana(BaseModel):
     reversed: str = Field(..., description="The reversed divinatory meaning of the tarot arcana")
 
 class TarotDeck(BaseModel): 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     major_arcana: List[Arcana] = Field(..., description="The 22 Major Arcana of a Tarot Deck")
     minor_arcana: List[Arcana] = Field(..., description="The 56 Minor Arcana of a Tarot Deck")
 
@@ -64,6 +63,63 @@ def tarot_app():
     client = openai.Client()
     
     st.title("Custom Tarot Deck Generator")
+
+    with st.expander("About", expanded=False):
+        st.markdown("""
+        Welcome to the **Custom Tarot Deck Generator**! This application allows you to create a fully personalized tarot deck based on your chosen theme. You can generate all 78 cards, including 22 Major Arcana and 56 Minor Arcana, with custom descriptions and card images.
+
+        ## How to Use the Application
+
+        ### Step 1: Enter a Theme for Your Tarot Deck
+        - **Input**: At the top of the application, there is a text input box labeled *Enter a theme for your custom Tarot deck*.
+        - **Prompt**: Enter a creative theme or concept for your deck. This could be anything from "Ancient Mythology" to "Space Exploration" or even something abstract like "Emotional Growth."
+
+        ### Step 2: Generate the Deck
+        - **Button**: After entering your theme, click the **Generate Deck** button.
+        - **Deck Creation**: Once the deck is generated, you will see the Major Arcana and Minor Arcana cards listed. You can expand each card to view its:
+        - Name
+        - Description
+        - Divinatory Meaning
+        - Reversed Meaning
+
+        ### Step 3: Generate Tarot Card Images
+        - **Button**: After reviewing your deck, click the **Generate Deck Card Images** button.
+        - **Progress Bar**: A progress bar will appear, indicating the status of generating each card's physical description and image.
+        - **Live Rendering**: As each card is generated, the image and description will be displayed in real-time below the progress bar.
+
+        ### Step 4: Review the Generated Cards
+        - **Major Arcana**: The generated Major Arcana cards will be shown first. You can expand each card to view its:
+        - Name
+        - Description
+        - Divinatory Meaning
+        - Reversed Meaning
+        - Physical Card Description
+        - Image (rendered directly in the app)
+        
+        - **Minor Arcana**: The generated Minor Arcana cards will be shown next with the same details and image rendering.
+
+        ### Step 5: Download the Custom Deck
+        - **Download**: Once all the cards are generated, you can download the entire deck as a JSON file.
+        - **Button**: Click the **Download Deck JSON** button to save the JSON file to your computer.
+        
+        This file will include the detailed descriptions and images of all 78 tarot cards from your custom deck.
+
+        ## Example Usage
+
+        - **Theme**: You might enter a theme like "Oceanic Adventures."
+        - **Deck Generation**: The application will create a tarot deck with cards that match the theme, like "The Lighthouse" for the Major Arcana or "The Wave" as part of the custom suits in the Minor Arcana.
+        - **Image Generation**: The application will generate images based on the card descriptions, like a card depicting an underwater castle or a majestic sea creature.
+        - **Download**: Finally, you can download the JSON file of your ocean-themed tarot deck for future use.
+
+        ## Notes:
+        - The application integrates GPT-4 to generate card descriptions based on the theme you provide.
+        - Each card's image is generated dynamically based on the descriptions, which are influenced by your theme.
+        - The final JSON file includes all card details, which can be used for future applications or as a personalized tarot deck.
+
+        Enjoy creating your custom tarot deck!
+                    
+    """)
+
     
     # User input for deck theme
     theme_prompt = st.text_input("Enter a theme for your custom Tarot deck:")
