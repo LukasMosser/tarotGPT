@@ -27,7 +27,7 @@ with sdxl_image.imports():
     from diffusers import DiffusionPipeline
     from fastapi import Response
 
-@app.cls(gpu=modal.gpu.A100(), container_idle_timeout=240, image=sdxl_image, secrets=[modal.Secret.from_name("HF_TOKEN")])
+@app.cls(gpu=modal.gpu.A100(), container_idle_timeout=240, image=sdxl_image, secrets=[modal.Secret.from_name("HF_TOKEN")], concurrency_limit=2)
 class Model:
     @modal.build()
     def build(self):
