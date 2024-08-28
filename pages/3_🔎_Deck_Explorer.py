@@ -10,6 +10,7 @@ import math
 import os
 import img2pdf
 import uuid
+import modal 
 
 # Define Pydantic models
 class Arcana(BaseModel):
@@ -54,6 +55,18 @@ def fetch_tarot_deck_from_gist(gist_url):
         st.error(f"Error fetching tarot deck: {str(e)}")
         return None
     
+
+def generate_cardback(prompt: str) -> str:
+    cls = modal.Cls.lookup("tarotGPT", "Model")
+    obj = cls()  # You can pass any constructor arguments here
+    response = obj.inference.remote(prompt=prompt)
+
+    image_base64 = base64.b64encode(response).decode("utf-8")
+
+    image_data = base64.b64decode(image_base64)
+    image = Image.open(BytesIO(image_data))
+    return image
+
 # Function to decode the base64 image and display it, rotated if reversed
 def display_card_image(card: ImagedArcana, reversed: bool):
     image_data = base64.b64decode(card.image_base64)
@@ -77,7 +90,10 @@ if "minor_arcana_images" not in st.session_state:
 if "deck_pdf_path" not in st.session_state:
     st.session_state["deck_pdf_path"] = None
 
-def create_card_grids(card_images, output_dir="output_cards"):
+if "cardback_image" not in st.session_state:
+    st.session_state["cardback_image"] = None
+
+def create_card_grids(card_images, cardback_image=None, output_dir="output_cards"):
     # A4 dimensions in pixels at 300 DPI (for high-quality print)
     a4_width_px = int(21.0 / 2.54 * 300)
     a4_height_px = int(29.7 / 2.54 * 300)
@@ -105,7 +121,8 @@ def create_card_grids(card_images, output_dir="output_cards"):
 
     for page in range(num_pages):
         # Create a new blank A4 image
-        a4_image = Image.new("RGB", (a4_width_px, a4_height_px), "white")
+        a4_image_front = Image.new("RGB", (a4_width_px, a4_height_px), "white")
+        a4_image_back = Image.new("RGB", (a4_width_px, a4_height_px), "white") if cardback_image else None
         
         # Determine the slice of cards for this page
         start_idx = page * cards_per_page
@@ -121,12 +138,21 @@ def create_card_grids(card_images, output_dir="output_cards"):
 
             # Resize and paste the card onto the A4 image
             card_image_resized = card_image.resize((card_width_px, card_height_px), Image.Resampling.LANCZOS)
-            a4_image.paste(card_image_resized, (x, y))
+            a4_image_front.paste(card_image_resized, (x, y))
+            
+            if cardback_image:
+                cardback_resized = cardback_image.resize((card_width_px, card_height_px), Image.Resampling.LANCZOS)
+                a4_image_back.paste(cardback_resized, (x, y))
         
-        # Save the resulting image for this page
-        output_path = os.path.join(output_dir, f"cards_page_{page + 1}.png")
-        a4_image.save(output_path, "PNG")
-        image_paths.append(output_path)
+        # Save the resulting images for this page
+        output_front_path = os.path.join(output_dir, f"cards_page_{page + 1}_front.png")
+        a4_image_front.save(output_front_path, "PNG")
+        image_paths.append(output_front_path)
+
+        if cardback_image:
+            output_back_path = os.path.join(output_dir, f"cards_page_{page + 1}_back.png")
+            a4_image_back.save(output_back_path, "PNG")
+            image_paths.append(output_back_path)
     
     # Generate a unique filename using UUID
     unique_filename = f"{uuid.uuid4()}.pdf"
@@ -140,6 +166,7 @@ def create_card_grids(card_images, output_dir="output_cards"):
     
     # Return the PDF path for download
     return pdf_path
+
 
 def create_major_arcana_grid(card_images, output_path="major_arcana_grid.png"):
     # Instagram-friendly dimensions (1080x1080 pixels or similar)
@@ -215,6 +242,9 @@ if gist_url:
 if st.session_state["tarot_deck"] is not None:
     st.success("Tarot deck fetched successfully!")
 
+    st.markdown("""## Generate Tarot Card Grids  
+                You can generate grids of the Major Arcana and Minor Arcana cards in the Tarot Deck
+                """)
     if st.button("Generate Major Arcana Grid PNG"):
         major_arcana_images = []
         for card in tarot_deck.major_arcana:
@@ -247,6 +277,22 @@ if st.session_state["tarot_deck"] is not None:
             uuid_number = uuid.uuid4()
             st.download_button(label="Download Minor Arcana Grid PNG", data=f, file_name=f"minor_arcana_grid_{uuid_number}.png", mime="image/png")
 
+    st.markdown("""## Cardback Generator  
+                You can generate a cardback image for the Tarot Deck using a text prompt.
+                """)
+    cardback_prompt = st.text_input("Enter a prompt for the cardback generator:")
+    if st.button("Generate Cardback"):
+        cardback_image = generate_cardback(cardback_prompt)
+        st.session_state["cardback_image"] = cardback_image
+    
+    if st.session_state["cardback_image"] is not None:
+        st.image(st.session_state["cardback_image"], caption="Generated Cardback", use_column_width=True)
+
+    st.markdown("""## Tarot Deck PDF Generator  
+                You can generate a PDF file containing all the Tarot Cards in the Deck.
+                If you have generated a cardback image, it will be used as the back of the cards.
+                """)
+
     if st.button("Generate Tarot Cards PDF"):
         card_images = []
         for card in tarot_deck.major_arcana + tarot_deck.minor_arcana:
@@ -254,7 +300,8 @@ if st.session_state["tarot_deck"] is not None:
             image = Image.open(BytesIO(image_data))
             card_images.append(image)
 
-        pdf_path = create_card_grids(card_images)
+        cardback_image = st.session_state.get("cardback_image", None)
+        pdf_path = create_card_grids(card_images, cardback_image=st.session_state["cardback_image"])
         st.session_state["deck_pdf_path"] = pdf_path
     
     if st.session_state["deck_pdf_path"] is not None:
