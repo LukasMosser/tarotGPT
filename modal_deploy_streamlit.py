@@ -6,7 +6,7 @@ import modal
 
 
 image = modal.Image.debian_slim(python_version="3.11").pip_install(
-    "streamlit", "openai", "modal"
+    "streamlit", "openai", "modal", "img2pdf"
 )
 
 app = modal.App(name="tarot-gpt-streamlit-frontend", image=image)
