@@ -34,10 +34,11 @@ streamlit_pages_folder_mount = modal.Mount.from_local_dir(
     allow_concurrent_inputs=100,
     mounts=[streamlit_script_mount, streamlit_pages_folder_mount],
     secrets=[modal.Secret.from_name("tarot-gpt-openai-key")],
-    timeout=500,
+    timeout=60*20,
+    container_idle_timeout=60*20,
 )
 @modal.web_server(8501)
 def run():
     target = shlex.quote(str(streamlit_script_remote_path))
-    cmd = f"streamlit run {target} --server.port 8501 --server.enableCORS=false --server.enableXsrfProtection=false"
+    cmd = f"streamlit run {target} --server.port 8501 --server.headless true"
     subprocess.Popen(cmd, shell=True)
