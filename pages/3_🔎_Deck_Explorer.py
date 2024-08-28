@@ -258,7 +258,7 @@ if st.session_state["tarot_deck"] is not None:
         st.session_state["deck_pdf_path"] = pdf_path
     
     if st.session_state["deck_pdf_path"] is not None:
-        download_pdf(pdf_path)
+        download_pdf(st.session_state["deck_pdf_path"])
 
 
     st.header("Major Arcana")
