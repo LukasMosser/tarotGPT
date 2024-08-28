@@ -323,6 +323,11 @@ def tarot_reading_app():
                         reversed = card_data['reversed']
                         st.subheader(f"Position {positions[idx]}: {card.name} ({'Reversed' if reversed else 'Upright'})")
                         display_card_image(card, reversed)
+                        with st.expander(card.name):
+                            st.write(f"**Description**: {card.description}")
+                            st.write(f"**Divinatory Meaning**: {card.divinatory_meaning}")
+                            st.write(f"**Reversed Meaning**: {card.reversed}")
+                            st.write(f"**Physical Description**: {card.physical_description}")
                         interpretation = interpret_card(card, querent_question, positions[idx], reversed, deck_description)
                         st.write(interpretation)
                         interpretations.append(interpretation)

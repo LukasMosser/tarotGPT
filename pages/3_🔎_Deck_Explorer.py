@@ -311,18 +311,18 @@ if st.session_state["tarot_deck"] is not None:
     st.header("Major Arcana")
     for card in tarot_deck.major_arcana:
         with st.expander(card.name):
-            st.write(f"Description: {card.description}")
-            st.write(f"Divinatory Meaning: {card.divinatory_meaning}")
-            st.write(f"Reversed Meaning: {card.reversed}")
-            st.write(f"Physical Description: {card.physical_description}")
+            st.write(f"**Description**: {card.description}")
+            st.write(f"**Divinatory Meaning**: {card.divinatory_meaning}")
+            st.write(f"**Reversed Meaning**: {card.reversed}")
+            st.write(f"**Physical Description**: {card.physical_description}")
             display_card_image(card, reversed=False)
 
     st.header("Minor Arcana")
     for card in tarot_deck.minor_arcana:
         with st.expander(card.name):
-            st.write(f"Description: {card.description}")
-            st.write(f"Divinatory Meaning: {card.divinatory_meaning}")
-            st.write(f"Reversed Meaning: {card.reversed}")
-            st.write(f"Physical Description: {card.physical_description}")
+            st.write(f"**Description**: {card.description}")
+            st.write(f"**Divinatory Meaning**: {card.divinatory_meaning}")
+            st.write(f"**Reversed Meaning**: {card.reversed}")
+            st.write(f"**Physical Description**: {card.physical_description}")
             display_card_image(card, reversed=False)
 
