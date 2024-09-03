@@ -36,7 +36,7 @@ streamlit_pages_folder_mount = modal.Mount.from_local_dir(
     mounts=[streamlit_script_mount, streamlit_pages_folder_mount],
     secrets=[modal.Secret.from_name("tarot-gpt-openai-key")],
     timeout=60*25,
-    container_idle_timeout=60*25,
+    container_idle_timeout=60*20,
 )
 @modal.web_server(8501)
 def run():
